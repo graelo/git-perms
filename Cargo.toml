@@ -2,7 +2,7 @@
 name = "git-perms"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.88.0"
+rust-version = "1.94.0"
 description = "Store and restore Unix file permissions across git operations."
 readme = "README.md"
 
