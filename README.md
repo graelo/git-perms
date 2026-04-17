@@ -2,13 +2,13 @@
 
 [![crate](https://img.shields.io/crates/v/git-perms.svg)](https://crates.io/crates/git-perms)
 [![documentation](https://docs.rs/git-perms/badge.svg)](https://docs.rs/git-perms)
-[![minimum rustc 1.88](https://img.shields.io/badge/rustc-1.88+-red.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
+[![minimum rustc 1.94](https://img.shields.io/badge/rustc-1.94+-red.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
 [![rust 2024 edition](https://img.shields.io/badge/edition-2024-blue.svg)](https://doc.rust-lang.org/edition-guide/rust-2024/index.html)
 [![build status](https://github.com/graelo/git-perms/actions/workflows/essentials.yml/badge.svg)](https://github.com/graelo/git-perms/actions/workflows/essentials.yml)
 
 Store and restore Unix file permissions across git operations.
 
-Version requirement: _rustc 1.88+_
+Version requirement: _rustc 1.94+_
 
 :warning: **alpha** maturity level: **don't use this yet**
 
