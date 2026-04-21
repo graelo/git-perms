@@ -2,7 +2,7 @@
 name = "git-perms"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.94.0"
+rust-version = "1.95.0"
 description = "Store and restore Unix file permissions across git operations."
 readme = "README.md"
 
@@ -11,7 +11,7 @@ homepage = "https://github.com/graelo/git-perms"
 repository = "https://github.com/graelo/git-perms"
 license = "MIT OR Apache-2.0"
 
-keywords = ["git", "permissions", "unix", "cli"]
+keywords = ["cli", "git", "permissions", "unix"]
 categories = ["command-line-utilities"]
 exclude = ["/.github"]
 
