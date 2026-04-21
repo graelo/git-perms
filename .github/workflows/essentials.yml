@@ -35,7 +35,7 @@ jobs:
 
       - name: Cache crates from crates.io
         if: github.event_name == 'pull_request'
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         continue-on-error: false
         with:
           path: |
@@ -70,8 +70,13 @@ jobs:
       - name: Build (release)
         run: cargo build --all-features --release
 
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@055f5df8c3f65ea01cd41e9dc855becd88953486 # v2.75.18
+        with:
+          tool: cargo-nextest@0.9.133
+
       - name: Test
-        run: cargo test
+        run: ./ci/test_full.sh
 
   changes:
     name: Detect changes
@@ -95,7 +100,7 @@ jobs:
             workflows:
               - '.github/workflows/**'
               - '.github/actions/**'
-              - '.poutine.yml'
+              - '.github/poutine.yml'
               - '.github/zizmor.yml'
               - 'renovate.json'
 

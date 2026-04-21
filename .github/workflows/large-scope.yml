@@ -31,7 +31,7 @@ jobs:
           persist-credentials: false
 
       - name: Cache crates from crates.io
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         continue-on-error: false
         with:
           path: |
@@ -50,6 +50,11 @@ jobs:
         run: |
           cargo clippy --all-targets --all-features -- -D warnings
 
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@055f5df8c3f65ea01cd41e9dc855becd88953486 # v2.75.18
+        with:
+          tool: cargo-nextest@0.9.133
+
       - name: Build (dev)
         run: cargo build --all-features
 
@@ -57,7 +62,7 @@ jobs:
         run: cargo build --all-features --release
 
       - name: Test
-        run: cargo test
+        run: ./ci/test_full.sh
 
   test-other-platforms:
     name: Tests on
@@ -69,6 +74,10 @@ jobs:
         include:
           - os: macos-15-intel
             target: x86_64-apple-darwin
+            type: unix
+            toolchain: stable
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
             type: unix
             toolchain: stable
           - os: macos-latest
@@ -89,7 +98,7 @@ jobs:
           persist-credentials: false
 
       - name: Cache crates from crates.io
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         continue-on-error: false
         with:
           path: |
@@ -100,6 +109,11 @@ jobs:
             target/
           key: ${{ runner.os }}-${{ matrix.target }}-cargo-stable-${{ hashFiles('**/Cargo.lock') }}
 
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@055f5df8c3f65ea01cd41e9dc855becd88953486 # v2.75.18
+        with:
+          tool: cargo-nextest@0.9.133
+
       - name: Build (dev)
         run: cargo build --all-features
 
@@ -107,4 +121,4 @@ jobs:
         run: cargo build --all-features --release
 
       - name: Test
-        run: cargo test
+        run: ./ci/test_full.sh
