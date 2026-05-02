@@ -51,7 +51,7 @@ jobs:
           cargo clippy --all-targets --all-features -- -D warnings
 
       - name: Install cargo-nextest
-        uses: taiki-e/install-action@7769b73c2ec98c38dfcf2e18c83cfd4880c038c1 # v2.75.27
+        uses: taiki-e/install-action@b5fddbb5361bce8a06fb168c9d403a6cc552b084 # v2.75.29
         with:
           tool: cargo-nextest@0.9.133
 
@@ -110,7 +110,7 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.target }}-cargo-stable-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install cargo-nextest
-        uses: taiki-e/install-action@7769b73c2ec98c38dfcf2e18c83cfd4880c038c1 # v2.75.27
+        uses: taiki-e/install-action@b5fddbb5361bce8a06fb168c9d403a6cc552b084 # v2.75.29
         with:
           tool: cargo-nextest@0.9.133
 
