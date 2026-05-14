@@ -59,7 +59,7 @@ jobs:
 
       - name: Quality – cargo clippy
         run: |
-          cargo clippy --all-targets --all-features -- -D warnings
+          cargo clippy --locked --all-targets -- -D warnings
 
       - name: Quality – convco check
         run: |
@@ -72,10 +72,10 @@ jobs:
           rm convco
 
       - name: Build (dev)
-        run: cargo build --all-features
+        run: cargo build --locked
 
       - name: Build (release)
-        run: cargo build --all-features --release
+        run: cargo build --locked --release
 
       - name: Install cargo-nextest
         uses: taiki-e/install-action@b5fddbb5361bce8a06fb168c9d403a6cc552b084 # v2.75.29

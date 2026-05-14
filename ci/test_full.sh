@@ -27,9 +27,6 @@ if ! check_version $MSRV ; then
   exit 1
 fi
 
-FEATURES=()
-echo "Testing supported features: ${FEATURES[*]}"
-
 NEXTEST_PROFILE=""
 if [ -n "$CI" ]; then
   NEXTEST_PROFILE="--profile ci"
@@ -37,23 +34,20 @@ fi
 
 set -x
 
-# test the default
-cargo build
-cargo nextest run $NEXTEST_PROFILE
-
-# test no_std / no-default-features
-cargo build --no-default-features
-cargo nextest run $NEXTEST_PROFILE --no-default-features
-
-# test each feature in isolation
-for feature in "${FEATURES[@]}"; do
-  cargo build --no-default-features --features="$feature"
-  cargo nextest run $NEXTEST_PROFILE --no-default-features --features="$feature"
-done
-
-# test all features combined
-cargo build --features="${FEATURES[*]}"
-cargo nextest run $NEXTEST_PROFILE --features="${FEATURES[*]}"
+# test the default build
+cargo build --locked
+cargo nextest run --locked $NEXTEST_PROFILE
 
 # doc tests (not supported by nextest)
-cargo test --doc
+cargo test --locked --doc
+
+# CLI smoke test (release binary). CARGO_BUILD_TARGET (set in the compat
+# matrix) redirects output to target/<target>/release; Git Bash on Windows
+# reports OSTYPE=msys.
+cargo build --locked --release
+
+BIN="target/${CARGO_BUILD_TARGET:+${CARGO_BUILD_TARGET}/}release/git-perms"
+case "${OSTYPE:-}" in
+  msys*|cygwin*) BIN="${BIN}.exe" ;;
+esac
+"${BIN}" --help
