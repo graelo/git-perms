@@ -1,3 +1,10 @@
+# Tag-triggered release: build multi-platform binaries and publish.
+#
+# Local:
+#   act push -W .github/workflows/release.yml -j prepare-artifacts
+#   act push -W .github/workflows/release.yml -j release
+#   act push -W .github/workflows/release.yml -j homebrew
+
 name: Release
 on:
   push:
@@ -12,98 +19,106 @@ concurrency:
 
 jobs:
   prepare-artifacts:
-    name: Prepare release artifacts
+    name: ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
+      id-token: write
+      attestations: write
+    defaults:
+      run:
+        shell: bash
     strategy:
+      fail-fast: false
       matrix:
         include:
-          - os: macos-latest
-            target: aarch64-apple-darwin
-            rust: stable
-            suffix: ''
-            archive_ext: zip
-          - os: macos-15-intel
-            target: x86_64-apple-darwin
-            rust: stable
-            suffix: ''
-            archive_ext: zip
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-musl
-            rust: stable
-            suffix: ''
-            archive_ext: tar.xz
-          - os: ubuntu-24.04-arm
-            target: aarch64-unknown-linux-musl
-            rust: stable
-            suffix: ''
-            archive_ext: tar.xz
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+            archive: tar.xz
+          - target: aarch64-unknown-linux-musl
+            os: ubuntu-24.04-arm
+            archive: tar.xz
+          - target: x86_64-apple-darwin
+            os: macos-15-intel
+            archive: tar.xz
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            archive: tar.xz
     steps:
-      - name: Rust install
-        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
-        with:
-          toolchain: ${{ matrix.rust }}
-          targets: ${{ matrix.target }}
-          components: rustfmt, clippy
-
-      - name: Install musl-tools (Linux)
-        if: contains(matrix.target, '-musl')
-        run: sudo apt-get update && sudo apt-get install -y musl-tools
-
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Build Release
-        env:
-          TARGET: ${{ matrix.target }}
-        run: cargo build --release --target "${TARGET}"
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
 
-      - name: Compress to zip (macOS)
-        if: ${{ matrix.os == 'macos-latest' || matrix.os == 'macos-15-intel' }}
-        env:
-          REPO_NAME: ${{ github.event.repository.name }}
-          TARGET: ${{ matrix.target }}
-          ARCHIVE_EXT: ${{ matrix.archive_ext }}
+      - name: Install musl toolchain
+        if: contains(matrix.target, 'linux-musl')
         run: |
-          cp "target/${TARGET}/release/${REPO_NAME}" .
-          zip -A "${REPO_NAME}-${TARGET}.${ARCHIVE_EXT}" "${REPO_NAME}"
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
 
-      - name: Compress to tar.xz (Linux)
-        if: ${{ matrix.os == 'ubuntu-latest' || matrix.os == 'ubuntu-24.04-arm' }}
-        env:
-          REPO_NAME: ${{ github.event.repository.name }}
-          TARGET: ${{ matrix.target }}
-          ARCHIVE_EXT: ${{ matrix.archive_ext }}
-        run: |
-          cp "target/${TARGET}/release/${REPO_NAME}" .
-          tar Jcf "${REPO_NAME}-${TARGET}.${ARCHIVE_EXT}" "${REPO_NAME}"
-
-      - name: List files
+      - name: Build (release)
         env:
           TARGET: ${{ matrix.target }}
-        run: |
-          ls -alF .
-          ls -alF "target/${TARGET}/release/"
-        shell: bash
+        run: cargo build --locked --release --target "${TARGET}"
 
-      - name: Upload artifacts
+      - name: Package
+        env:
+          TARGET: ${{ matrix.target }}
+          ARCHIVE_FORMAT: ${{ matrix.archive }}
+          TAG: ${{ github.ref_name }}
+          BIN: git-perms
+        run: |
+          set -euo pipefail
+          SRC="target/${TARGET}/release/${BIN}"
+
+          STANDALONE="${BIN}-${TARGET}"
+          cp "${SRC}" "${STANDALONE}"
+
+          PKG_DIR="${BIN}-${TAG}-${TARGET}"
+          mkdir "${PKG_DIR}"
+          cp "${SRC}" "${PKG_DIR}/"
+          cp README.md LICENSE* "${PKG_DIR}/" 2>/dev/null || true
+
+          ARCHIVE_FILE="${PKG_DIR}.tar.xz"
+          tar -cJf "${ARCHIVE_FILE}" "${PKG_DIR}"
+
+          echo "STANDALONE=${STANDALONE}" >> "${GITHUB_ENV}"
+          echo "ARCHIVE_FILE=${ARCHIVE_FILE}" >> "${GITHUB_ENV}"
+
+      - name: Attest provenance
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
+        with:
+          subject-path: |
+            ${{ env.STANDALONE }}
+            ${{ env.ARCHIVE_FILE }}
+
+      - name: Upload – standalone
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: ${{ github.event.repository.name }}-${{ matrix.target }}.${{ matrix.archive_ext }}
-          path: ${{ github.event.repository.name }}-${{ matrix.target }}.${{ matrix.archive_ext }}
+          name: ${{ env.STANDALONE }}
+          path: ${{ env.STANDALONE }}
+          retention-days: 1
+
+      - name: Upload – archive
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ env.ARCHIVE_FILE }}
+          path: ${{ env.ARCHIVE_FILE }}
           retention-days: 1
 
   release:
-    name: Create a GitHub Release
+    name: Publish release
     runs-on: ubuntu-latest
+    environment: release
     permissions:
       contents: write
-      id-token: write
-      attestations: write
     needs:
       - prepare-artifacts
     steps:
@@ -114,37 +129,25 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Extract version
-        id: extract-version
-        run: |
-          echo "tag-name=${GITHUB_REF#refs/tags/}" >> "${GITHUB_OUTPUT}"
-
-      - name: Download convco
+      - name: Install convco
         run: |
           git show-ref
           curl -sSfLO https://github.com/convco/convco/releases/latest/download/convco-ubuntu.zip
           unzip convco-ubuntu.zip
           chmod +x convco
 
-      - name: Use convco to create the changelog
+      - name: Generate changelog
         run: |
-          ./convco changelog -c .convco --max-versions 1 --include-hidden-sections > CHANGELOG.md
+          ./convco changelog -c .convco --max-versions 1 > CHANGELOG.md
           rm convco convco-ubuntu.zip
 
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - name: Download artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: ${{ github.event.repository.name }}-x86_64-unknown-linux-musl.tar.xz
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: ${{ github.event.repository.name }}-aarch64-unknown-linux-musl.tar.xz
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: ${{ github.event.repository.name }}-aarch64-apple-darwin.zip
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: ${{ github.event.repository.name }}-x86_64-apple-darwin.zip
+          path: artifacts
+          merge-multiple: true
 
-      - name: Create GitHub Release
+      - name: Create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_NAME: ${{ github.ref_name }}
@@ -152,14 +155,7 @@ jobs:
           gh release create "${TAG_NAME}" \
             --title "${TAG_NAME}" \
             --notes-file CHANGELOG.md \
-            ./*.zip ./*.tar.xz
-
-      - name: Attest build provenance
-        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
-        with:
-          subject-path: |
-            *.zip
-            *.tar.xz
+            ./artifacts/*
 
   homebrew:
     name: Bump Homebrew formula
@@ -184,7 +180,8 @@ jobs:
         run: |
           echo "tag-name=${GITHUB_REF#refs/tags/}" >> "${GITHUB_OUTPUT}"
 
-      - uses: mislav/bump-homebrew-formula-action@ccf2332299a883f6af50a1d2d41e5df7904dd769 # v4.1
+      - name: Bump Homebrew formula
+        uses: mislav/bump-homebrew-formula-action@ccf2332299a883f6af50a1d2d41e5df7904dd769 # v4.1
         if: '!contains(github.ref, ''-'')' # skip prereleases
         with:
           formula-name: git-perms
