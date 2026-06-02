@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.0] - 2026-04-21
+## [0.0.2] - 2026-06-02
 
 ### Added
 
@@ -21,12 +21,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable pre-commit behavior via `git config perms.preCommit`
   (`auto`, `warn`, `block`)
 
+### Changed
+
+- Updated Cargo dependencies (minor and patch releases)
+
 ### Security
 
 - All CI workflows hardened per supply-chain playbook: actions pinned to SHA,
   least-privilege permissions, persist-credentials disabled, cargo-deny +
   poutine + zizmor audits
 - Build provenance attestation on release artifacts
+- CI workflows aligned with supply-chain playbook v1.1; Renovate granted
+  `create-github-app-token` permissions
 
-[Unreleased]: https://github.com/graelo/git-perms/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/graelo/git-perms/releases/tag/v0.1.0
+[Unreleased]: https://github.com/graelo/git-perms/compare/v0.0.2...HEAD
+[0.0.2]: https://github.com/graelo/git-perms/compare/v0.0.1...v0.0.2
