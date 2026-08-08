@@ -189,6 +189,7 @@ jobs:
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           echo "/home/linuxbrew/.linuxbrew/bin" >> "${GITHUB_PATH}"
           brew tap "${TAP_REPO}"
+          brew trust "${TAP_REPO}"
           gh auth setup-git
           git config --global user.name  "${BOT_NAME}"
           git config --global user.email "${BOT_USER_ID}+${BOT_NAME}@users.noreply.github.com"
