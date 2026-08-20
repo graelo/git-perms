@@ -1,0 +1,53 @@
+.TH GIT-PERMS 1 "2026-06-02" "git-perms 0.0.2" "User Commands"
+.SH NAME
+git-perms \- store and restore Unix file permissions across git operations
+.SH SYNOPSIS
+.B git perms
+.RI [ COMMAND ]
+.br
+.B git-perms
+.RI [ COMMAND ]
+.SH DESCRIPTION
+.B git-perms
+records full Unix file modes for git-tracked files in a committed
+.I .gitperms
+file.
+It restores those modes after operations that otherwise preserve only git's
+executable bit, such as clone, checkout, merge, or rebase.
+.PP
+The binary is normally invoked as the
+.B git perms
+subcommand.
+The standalone
+.B git-perms
+name is also available.
+.SH COMMANDS
+.TP
+.B save
+Scan git-tracked files and write their permissions to
+.IR .gitperms .
+Existing entries for files no longer tracked are removed.
+.TP
+.B restore
+Read
+.I .gitperms
+and apply the stored modes to files in the working tree.
+Missing files are skipped with a warning.
+.TP
+.B diff
+Show permission differences between
+.I .gitperms
+and the filesystem.
+Exits with status 1 when differences exist.
+.TP
+.BI "diff --quiet"
+Check for permission differences without printing them.
+Exits with status 1 when differences exist.
+.TP
+.B hook install
+Install hooks that automatically save and restore permissions:
+.BR pre\-commit ,
+.BR post\-checkout ,
+.BR post\-merge ,
+and
+.BR post\-rewrite .

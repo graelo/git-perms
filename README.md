@@ -9,6 +9,9 @@
 
 Store and restore Unix file permissions across git operations.
 
+The package includes a Rust library for integrations; the `git perms` command
+is the primary user interface.
+
 Version requirement: _rustc 1.95+_
 
 :warning: **alpha** maturity level: **don't use this yet**
@@ -99,6 +102,14 @@ To install shell completions:
 ```console
 $ git perms generate-completion zsh|bash|fish > /path/to/your/completions/folder
 ```
+
+## Development
+
+The [`Makefile`](Makefile) is the canonical definition of local verification
+tasks. Run `make help` to list them, `make check` before pushing, and
+`make check-all` before opening a pull request. The `git-perms(1)` manpage is
+available in [`man/git-perms.1`](man/git-perms.1) and can be linted with
+`make man`.
 
 ## License
 
