@@ -27,6 +27,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   workflow with the playbook reference
 - CI workflow callers use the `$/` self-repository syntax for reusable
   workflow references (recommended by zizmor's self-repository audit)
+- CI installs Rust with the `actions-rust-lang/setup-rust-toolchain` action
+  pinned to the immutable `v2.0.0` tag, replacing the untagged
+  `dtolnay/rust-toolchain` branch pin that triggered zizmor's
+  `ref-version-mismatch` alerts; cargo invocations now deny warnings via
+  the action's `build-warnings` default
 
 ## [0.0.2] - 2026-06-02
 
