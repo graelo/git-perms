@@ -27,6 +27,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   workflow with the playbook reference
 - CI workflow callers use the `$/` self-repository syntax for reusable
   workflow references (recommended by zizmor's self-repository audit)
+- Remove the unused `[build-dependencies]` section and the `package.homepage`
+  metadata redundant with `package.repository`; nightly cargo flags both under
+  `build.warnings`, which the CI `build-warnings: deny` default turns fatal
 - CI installs Rust with the `actions-rust-lang/setup-rust-toolchain` action
   pinned to the immutable `v2.0.0` tag, replacing the untagged
   `dtolnay/rust-toolchain` branch pin that triggered zizmor's
