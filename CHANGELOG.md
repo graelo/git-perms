@@ -23,6 +23,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Makefile-based verification workflow
 - Keep user-facing crate documentation in `README.md`; `src/lib.rs` remains
   focused on the library module and API declarations
+- Include hidden commit sections in release changelog and align the release
+  workflow with the playbook reference
+- CI workflow callers use the `$/` self-repository syntax for reusable
+  workflow references (recommended by zizmor's self-repository audit)
 
 ## [0.0.2] - 2026-06-02
 
