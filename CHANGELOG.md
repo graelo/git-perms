@@ -16,6 +16,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   exit statuses
 - `AGENTS.md` with repository architecture, verification, and documentation
   guidance
+- A `.cargo/config.toml` that denies cargo build warnings locally, mirroring
+  the CI `build-warnings: deny` default
 
 ### Changed
 
